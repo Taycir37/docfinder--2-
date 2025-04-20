@@ -39,7 +39,7 @@ export default function SearchPage({
                       ? `${specialty}s disponibles`
                       : "Tous les médecins disponibles"}
               </h2>
-              <p className="text-gray-600">12 médecins trouvés</p>
+              <p className="text-gray-600">5 médecins trouvés</p>
             </div>
 
             <DoctorsList city={city} specialty={specialty} />

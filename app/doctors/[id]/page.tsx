@@ -10,14 +10,14 @@ import { AppointmentCalendar } from "@/components/appointment-calendar"
 // Mock data - would be fetched from API in real app
 const doctor = {
   id: 1,
-  name: "Dr. Sophie Martin",
+  name: "Dr. Leila Ben ALI",
   specialty: "Cardiologue",
   rating: 4.9,
   reviews: 124,
-  address: "15 rue de la Paix, Paris",
+  address: "Avenue Habib Bourguiab  , Tunis", 
   phone: "01 23 45 67 89",
   email: "dr.martin@docfinder.com",
-  website: "www.dr-martin-cardio.fr",
+  website: "www.dr-leila-cardio.tn",
   availability: "Disponible aujourd'hui",
   hours: {
     monday: "9h00 - 18h00",
@@ -36,7 +36,7 @@ const doctor = {
     "Cardiologue, Hôpital de la Pitié-Salpêtrière (2015-2020)",
     "Cardiologue en cabinet privé (depuis 2020)",
   ],
-  languages: ["Français", "Anglais", "Espagnol"],
+  languages: ["Français", "Anglais", "Espagnol","arabe"],
   services: [
     "Consultation cardiologique",
     "Électrocardiogramme (ECG)",
