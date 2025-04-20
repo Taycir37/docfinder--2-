@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil du médecin - DocFinder</title>
+    <meta name="description" content="Consultez le profil du médecin, ses informations, ses disponibilités et prenez rendez-vous.">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Parse SDK -->
+    <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+    <!-- Configuration Back4App -->
+    <!-- <script src="back4app-config.js"></script> -->
+    <!-- Services -->
+    <!-- <script src="services.js"></script> -->
+    <style>
+        /* Styles spécifiques à la page de profil médecin */
+        .doctor-profile {
+            padding: var(--spacing-xl) 0;
+        }
+        
+        .doctor-profile-header {
+            background-color: var(--white);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+            box-shadow: var(--shadow);
+            display: flex;
+            gap: var(--spacing-lg);
+        }
+        
+        .doctor-profile-image {
+            width: 150px;
+            height: 150px;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        
+        .doctor-profile-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .doctor-profile-info {
+            flex-grow: 1;
+        }
+        
+        .doctor-profile-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .doctor-profile-specialty {
+            color: var(--secondary);
+            font-weight: 500;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .doctor-profile-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .doctor-profile-detail {
+            display: flex;
+            align-items: center;
+            color: var(--gray-600);
+            font-size: 0.875rem;
+        }
+        
+        .doctor-profile-detail i {
+            width: 16px;
+            margin-right: var(--spacing-sm);
+            color: var(--primary);
+        }
+        
+        .doctor-profile-actions {
+            display: flex;
+            gap: var(--spacing-md);
+        }
+        
+        .doctor-profile-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: var(--spacing-lg);
+        }
+        
+        .doctor-profile-section {
+            background-color: var(--white);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+            box-shadow: var(--shadow);
+        }
+        
+        .doctor-profile-section h3 {
+            margin-bottom: var(--spacing-md);
+            color: var(--primary);
+            border-bottom: 1px solid var(--gray-200);
+            padding-bottom: var(--spacing-sm);
+        }
+        
+        .doctor-profile-bio {
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .doctor-profile-education,
+        .doctor-profile-experience {
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .education-item,
+        .experience-item {
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .education-item h4,
+        .experience-item h4 {
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .education-item p,
+        .experience-item p {
+            color: var(--gray-600);
+            font-size: 0.875rem;
+        }
+        
+        .reviews-list {
+            margin-top: var(--spacing-md);
+        }
+        
+        .review-item {
+            border-bottom: 1px solid var(--gray-200);
+            padding-bottom: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .review-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .review-author {
+            font-weight: 600;
+        }
+        
+        .review-date {
+            color: var(--gray-500);
+            font-size: 0.75rem;
+        }
+        
+        .review-rating {
+            color: #fbbf24;
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .review-text {
+            color: var(--gray-700);
+        }
+        
+        .availability-calendar {
+            margin-top: var(--spacing-md);
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .calendar-nav {
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+        
+        .calendar-nav button {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            color: var(--primary);
+            cursor: pointer;
+        }
+        
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: var(--spacing-xs);
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .calendar-day-name {
+            text-align: center;
+            font-weight: 600;
+            color: var(--gray-600);
+            font-size: 0.75rem;
+        }
+        
+        .calendar-dates {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: var(--spacing-xs);
+        }
+        
+        .calendar-date {
+            text-align: center;
+            padding: var(--spacing-sm);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .calendar-date:hover {
+            background-color: var(--gray-100);
+        }
+        
+        .calendar-date.active {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+        
+        .calendar-date.disabled {
+            color: var(--gray-300);
+            cursor: not-allowed;
+        }
+        
+        .time-slots {
+            margin-top: var(--spacing-md);
+        }
+        
+        .time-slots h4 {
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .time-slots-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-sm);
+        }
+        
+        .time-slot {
+            text-align: center;
+            padding: var(--spacing-sm);
+            border: 1px solid var(--gray-300);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .time-slot:hover {
+            border-color: var(--primary);
+        }
+        
+        .time-slot.active {
+            background-color: var(--primary);
+            color: var(--white);
+            border-color: var(--primary);
+        }
+        
+        .time-slot.disabled {
+            color: var(--gray-300);
+            cursor: not-allowed;
+        }
+        
+        @media (max-width: 768px) {
+            .doctor-profile-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            
+            .doctor-profile-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .doctor-profile-actions {
+                flex-direction: column;
+            }
+            
+            .doctor-profile-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .time-slots-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <div class="logo">
+                <a href="index.html">
+                    <h1>Doc<span>Finder</span></h1>
+                </a>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html">Accueil</a></li>
+                    <li><a href="search.html">Recherche</a></li>
+                    <li><a href="about.html">À propos</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </nav>
+            <div class="auth-buttons">
+                <a href="login.html" class="btn btn-outline">Connexion</a>
+                <a href="register.html" class="btn btn-primary">Inscription</a>
+            </div>
+            <button id="mobileMenuBtn" class="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <div id="mobileMenu" class="mobile-menu">
+            <ul>
+                <li><a href="index.html">Accueil</a></li>
+                <li><a href="search.html">Recherche</a></li>
+                <li><a href="about.html">À propos</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li><a href="login.html">Connexion</a></li>
+                <li><a href="register.html">Inscription</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="doctor-profile">
+                <!-- Le contenu sera chargé dynamiquement depuis Back4App -->
+                <div class="loading">Chargement du profil...</div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <h2>Doc<span>Finder</span></h2>
+                    <p>Trouvez le médecin qu'il vous faut</p>
+                </div>
+                <div class="footer-links">
+                    <h3>Liens rapides</h3>
+                    <ul>
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="search.html">Recherche</a></li>
+                        <li><a href="about.html">À propos</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h3>Informations</h3>
+                    <ul>
+                        <li><a href="terms.html">Conditions d'utilisation</a></li>
+                        <li><a href="privacy.html">Politique de confidentialité</a></li>
+                        <li><a href="faq.html">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="footer-contact">
+                    <h3>Contact</h3>
+                    <p><i class="fas fa-envelope"></i> contact@docfinder.fr</p>
+                    <p><i class="fas fa-phone"></i> +33 1 23 45 67 89</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 DocFinder. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="back4app-config.js"></script>
+    <script src="services.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // Script spécifique à la page de profil médecin
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Initialiser Parse
+            initializeParse();
+            
+            // Récupérer l'ID du médecin depuis l'URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const doctorId = urlParams.get('id');
+            
+            if (!doctorId) {
+                window.location.href = 'search.html';
+                return;
+            }
+            
+            // Charger les données du médecin
+            await loadDoctorProfile(doctorId);
+            
+            // Charger les avis du médecin
+            await loadDoctorReviews(doctorId);
+            
+            // Initialiser le calendrier de disponibilité
+            initializeAvailabilityCalendar();
+        });
+        
+        // Charger le profil du médecin
+        async function loadDoctorProfile(doctorId) {
+            try {
+                const profileContainer = document.querySelector('.doctor-profile');
+                
+                // Récupérer les données du médecin
+                const doctor = await DoctorService.getDoctorById(doctorId);
+                
+                if (!doctor) {
+                    profileContainer.innerHTML = '<div class="error">Médecin non trouvé</div>';
+                    return;
+                }
+                
+                // Mettre à jour le titre de la page
+                document.title = `Dr. ${doctor.name} - DocFinder`;
+                
+                // Générer le HTML du profil
+                const profileHTML = `
+                    <div class="doctor-profile-header">
+                        <div class="doctor-profile-image">
+                            <img src="${doctor.imageUrl || 'images/doctor-placeholder.jpg'}" alt="${doctor.name}">
+                        </div>
+                        <div class="doctor-profile-info">
+                            <h1 class="doctor-profile-name">Dr. ${doctor.name}</h1>
+                            <p class="doctor-profile-specialty">${doctor.specialty}</p>
+                            
+                            <div class="doctor-profile-details">
+                                <div class="doctor-profile-detail">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>${doctor.address}, ${doctor.city}</span>
+                                </div>
+                                <div class="doctor-profile-detail">
+                                    <i class="fas fa-phone"></i>
+                                    <span>${doctor.phone}</span>
+                                </div>
+                                <div class="doctor-profile-detail">
+                                    <i class="fas fa-star"></i>
+                                    <span>${doctor.rating.toFixed(1)} (${doctor.reviewCount} avis)</span>
+                                </div>
+                                <div class="doctor-profile-detail">
+                                    <i class="fas fa-clock"></i>
+                                    <span>${doctor.availability}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="doctor-profile-actions">
+                                <a href="booking.html?id=${doctor.id}" class="btn btn-primary">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    Prendre rendez-vous
+                                </a>
+                                <button class="btn btn-outline" id="addReviewBtn">
+                                    <i class="fas fa-star"></i>
+                                    Laisser un avis
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="doctor-profile-content">
+                        <div class="doctor-profile-left">
+                            <div class="doctor-profile-section doctor-profile-bio">
+                                <h3>À propos</h3>
+                                <p>${doctor.bio || 'Aucune information disponible.'}</p>
+                            </div>
+                            
+                            <div class="doctor-profile-section doctor-profile-education">
+                                <h3>Formation</h3>
+                                ${doctor.education ? renderEducation(doctor.education) : '<p>Aucune information disponible.</p>'}
+                            </div>
+                            
+                            <div class="doctor-profile-section doctor-profile-experience">
+                                <h3>Expérience</h3>
+                                ${doctor.experience ? renderExperience(doctor.experience) : '<p>Aucune information disponible.</p>'}
+                            </div>
+                            
+                            <div class="doctor-profile-section doctor-profile-reviews">
+                                <h3>Avis des patients</h3>
+                                <div id="reviewsContainer">
+                                    <div class="loading">Chargement des avis...</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="doctor-profile-right">
+                            <div class="doctor-profile-section doctor-profile-availability">
+                                <h3>Disponibilités</h3>
+                                <div class="availability-calendar">
+                                    <div class="calendar-header">
+                                        <h4 id="currentMonth">Juin 2025</h4>
+                                        <div class="calendar-nav">
+                                            <button id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                                            <button id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="calendar-days">
+                                        <div class="calendar-day-name">Lun</div>
+                                        <div class="calendar-day-name">Mar</div>
+                                        <div class="calendar-day-name">Mer</div>
+                                        <div class="calendar-day-name">Jeu</div>
+                                        <div class="calendar-day-name">Ven</div>
+                                        <div class="calendar-day-name">Sam</div>
+                                        <div class="calendar-day-name">Dim</div>
+                                    </div>
+                                    
+                                    <div class="calendar-dates" id="calendarDates">
+                                        <!-- Les dates seront générées dynamiquement -->
+                                    </div>
+                                </div>
+                                
+                                <div class="time-slots">
+                                    <h4>Horaires disponibles</h4>
+                                    <div class="time-slots-grid" id="timeSlots">
+                                        <!-- Les créneaux horaires seront générés dynamiquement -->
+                                        <p>Sélectionnez une date pour voir les horaires disponibles</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                profileContainer.innerHTML = profileHTML;
+                
+                // Ajouter les événements pour le bouton d'ajout d'avis
+                document.getElementById('addReviewBtn').addEventListener('click', () => {
+                    showAddReviewModal(doctorId);
+                });
+                
+            } catch (error) {
+                console.error("Erreur lors du chargement du profil du médecin", error);
+                const profileContainer = document.querySelector('.doctor-profile');
+                profileContainer.innerHTML = '<div class="error">Une erreur est survenue lors du chargement du profil</div>';
+            }
+        }
+        
+        // Charger les avis du médecin
+        async function loadDoctorReviews(doctorId) {
+            try {
+                const reviewsContainer = document.getElementById('reviewsContainer');
+                
+                // Récupérer les avis du médecin
+                const reviews = await ReviewService.getDoctorReviews(doctorId);
+                
+                if (reviews.length === 0) {
+                    reviewsContainer.innerHTML = '<p>Aucun avis pour le moment.</p>';
+                    return;
+                }
+                
+                // Générer le HTML pour chaque avis
+                const reviewsHTML = reviews.map(review => `
+                    <div class="review-item">
+                        <div class="review-header">
+                            <div class="review-author">${review.patient.firstName} ${review.patient.lastName.charAt(0)}.</div>
+                            <div class="review-date">${formatDate(review.date)}</div>
+                        </div>
+                        <div class="review-rating">
+                            ${generateStarRating(review.rating)}
+                        </div>
+                        <div class="review-text">${review.comment}</div>
+                    </div>
+                `).join('');
+                
+                reviewsContainer.innerHTML = reviewsHTML;
+                
+            } catch (error) {
+                console.error("Erreur lors du chargement des avis", error);
+                const reviewsContainer = document.getElementById('reviewsContainer');
+                reviewsContainer.innerHTML = '<div class="error">Une erreur est survenue lors du chargement des avis</div>';
+            }
+        }
+        
+        // Initialiser le calendrier de disponibilité
+        function initializeAvailabilityCalendar() {
+            const currentDate = new Date();
+            let currentMonth = currentDate.getMonth();
+            let currentYear = currentDate.getFullYear();
+            
+            // Mettre à jour le calendrier
+            updateCalendar(currentMonth, currentYear);
+            
+            // Ajouter les événements pour les boutons de navigation
+            document.getElementById('prevMonth').addEventListener('click', () => {
+                currentMonth--;
+                if (currentMonth < 0) {
+                    currentMonth = 11;
+                    currentYear--;
+                }
+                updateCalendar(currentMonth, currentYear);
+            });
+            
+            document.getElementById('nextMonth').addEventListener('click', () => {
+                currentMonth++;
+                if (currentMonth > 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                }
+                updateCalendar(currentMonth, currentYear);
+            });
+        }
+        
+        // Mettre à jour le calendrier
+        function updateCalendar(month, year) {
+            const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const firstDayOfMonth = new Date(year, month, 1).getDay();
+            const calendarDates = document.getElementById('calendarDates');
+            const currentMonthElement = document.getElementById('currentMonth');
+            
+            // Mettre à jour le titre du mois
+            currentMonthElement.textContent = `${monthNames[month]} ${year}`;
+            
+            // Générer les dates du calendrier
+            let datesHTML = '';
+            
+            // Ajouter des cases vides pour les jours avant le premier jour du mois
+            for (let i = 0; i < (firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1); i++) {
+                datesHTML += '<div class="calendar-date disabled"></div>';
+            }
+            
+            // Ajouter les jours du mois
+            const today = new Date();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const isToday = date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
+                const isPast = date < new Date(today.setHours(0, 0, 0, 0));
+                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                
+                let className = 'calendar-date';
+                if (isToday) className += ' today';
+                if (isPast || isWeekend) className += ' disabled';
+                
+                datesHTML += `<div class="${className}" data-date="${date.toISOString()}">${day}</div>`;
+            }
+            
+            calendarDates.innerHTML = datesHTML;
+            
+            // Ajouter les événements pour les dates
+            document.querySelectorAll('.calendar-date:not(.disabled)').forEach(dateElement => {
+                dateElement.addEventListener('click', function() {
+                    // Supprimer la classe active de toutes les dates
+                    document.querySelectorAll('.calendar-date').forEach(el => el.classList.remove('active'));
+                    
+                    // Ajouter la classe active à la date sélectionnée
+                    this.classList.add('active');
+                    
+                    // Générer les créneaux horaires pour la date sélectionnée
+                    const selectedDate = new Date(this.dataset.date);
+                    generateTimeSlots(selectedDate);
+                });
+            });
+        }
+        
+        // Générer les créneaux horaires
+        function generateTimeSlots(date) {
+            const timeSlotsContainer = document.getElementById('timeSlots');
+            const dayOfWeek = date.getDay();
+            
+            // Simuler des créneaux horaires disponibles
+            // Dans une application réelle, ces données viendraient de Back4App
+            const availableSlots = [];
+            
+            // Heures de début et de fin selon le jour de la semaine
+            let startHour = 9;
+            let endHour = 17;
+            
+            // Mercredi après-midi fermé
+            if (dayOfWeek === 3) {
+                endHour = 12;
+            }
+            
+            // Générer les créneaux toutes les 30 minutes
+            for (let hour = startHour; hour < endHour; hour++) {
+                availableSlots.push(`${hour}:00`);
+                availableSlots.push(`${hour}:30`);
+            }
+            
+            // Simuler des créneaux déjà réservés
+            const bookedSlots = ['10:00', '11:30', '14:00', '16:30'];
+            
+            // Générer le HTML pour les créneaux horaires
+            const timeSlotsHTML = availableSlots.map(slot => {
+                const isBooked = bookedSlots.includes(slot);
+                const className = `time-slot ${isBooked ? 'disabled' : ''}`;
+                
+                return `<div class="${className}" data-time="${slot}">${slot}</div>`;
+            }).join('');
+            
+            timeSlotsContainer.innerHTML = timeSlotsHTML;
+            
+            // Ajouter les événements pour les créneaux horaires
+            document.querySelectorAll('.time-slot:not(.disabled)').forEach(slotElement => {
+                slotElement.addEventListener('click', function() {
+                    // Supprimer la classe active de tous les créneaux
+                    document.querySelectorAll('.time-slot').forEach(el => el.classList.remove('active'));
+                    
+                    // Ajouter la classe active au créneau sélectionné
+                    this.classList.add('active');
+                    
+                    // Récupérer la date et l'heure sélectionnées
+                    const selectedDate = document.querySelector('.calendar-date.active').dataset.date;
+                    const selectedTime = this.dataset.time;
+                    
+                    // Rediriger vers la page de réservation avec la date et l'heure sélectionnées
+                    const doctorId = new URLSearchParams(window.location.search).get('id');
+                    window.location.href = `booking.html?id=${doctorId}&date=${selectedDate}&time=${selectedTime}`;
+                });
+            });
+        }
+        
+        // Afficher la modal d'ajout d'avis
+        function showAddReviewModal(doctorId) {
+            // Vérifier si l'utilisateur est connecté
+            const currentUser = AuthService.getCurrentUser();
+            if (!currentUser) {
+                alert("Vous devez être connecté pour laisser un avis.");
+                window.location.href = `login.html?redirect=doctor-profile.html?id=${doctorId}`;
+                return;
+            }
+            
+            // Créer la modal
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Laisser un avis</h3>
+                        <button class="modal-close">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="reviewForm">
+                            <div class="form-group">
+                                <label for="rating">Note</label>
+                                <div class="rating-input">
+                                    <i class="far fa-star" data-rating="1"></i>
+                                    <i class="far fa-star" data-rating="2"></i>
+                                    <i class="far fa-star" data-rating="3"></i>
+                                    <i class="far fa-star" data-rating="4"></i>
+                                    <i class="far fa-star" data-rating="5"></i>
+                                </div>
+                                <input type="hidden" id="ratingValue" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="comment">Commentaire</label>
+                                <textarea id="comment" rows="4" required></textarea>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-outline modal-cancel">Annuler</button>
+                                <button type="submit" class="btn btn-primary">Envoyer</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Ajouter les styles pour la modal
+            const style = document.createElement('style');
+            style.textContent = `
+                .modal {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(0, 0, 0, 0.5);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 1000;
+                }
+                
+                .modal-content {
+                    background-color: var(--white);
+                    border-radius: var(--border-radius-lg);
+                    width: 90%;
+                    max-width: 500px;
+                    box-shadow: var(--shadow-xl);
+                }
+                
+                .modal-header {
+                    padding: var(--spacing-md);
+                    border-bottom: 1px solid var(--gray-200);
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                
+                .modal-close {
+                    background: none;
+                    border: none;
+                    font-size: 1.5rem;
+                    cursor: pointer;
+                    color: var(--gray-500);
+                }
+                
+                .modal-body {
+                    padding: var(--spacing-md);
+                }
+                
+                .rating-input {
+                    display: flex;
+                    gap: var(--spacing-sm);
+                    font-size: 1.5rem;
+                    margin-bottom: var(--spacing-md);
+                }
+                
+                .rating-input i {
+                    cursor: pointer;
+                    color: #fbbf24;
+                }
+                
+                .form-actions {
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: var(--spacing-md);
+                    margin-top: var(--spacing-md);
+                }
+            `;
+            
+            document.head.appendChild(style);
+            
+            // Ajouter les événements pour la modal
+            const closeModal = () => {
+                document.body.removeChild(modal);
+                document.head.removeChild(style);
+            };
+            
+            modal.querySelector('.modal-close').addEventListener('click', closeModal);
+            modal.querySelector('.modal-cancel').addEventListener('click', closeModal);
+            
+            // Ajouter les événements pour la notation par étoiles
+            const stars = modal.querySelectorAll('.rating-input i');
+            stars.forEach(star => {
+                star.addEventListener('mouseover', function() {
+                    const rating = parseInt(this.dataset.rating);
+                    updateStars(rating);
+                });
+                
+                star.addEventListener('click', function() {
+                    const rating = parseInt(this.dataset.rating);
+                    document.getElementById('ratingValue').value = rating;
+                    updateStars(rating);
+                });
+            });
+            
+            // Réinitialiser les étoiles lorsque la souris quitte la zone de notation
+            modal.querySelector('.rating-input').addEventListener('mouseleave', function() {
+                const currentRating = parseInt(document.getElementById('ratingValue').value);
+                updateStars(currentRating);
+            });
+            
+            // Fonction pour mettre à jour l'affichage des étoiles
+            function updateStars(rating) {
+                stars.forEach(star => {
+                    const starRating = parseInt(star.dataset.rating);
+                    if (starRating <= rating) {
+                        star.className = 'fas fa-star';
+                    } else {
+                        star.className = 'far fa-star';
+                    }
+                });
+            }
+            
+            // Ajouter l'événement pour le formulaire d'avis
+            modal.querySelector('#reviewForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const rating = parseInt(document.getElementById('ratingValue').value);
+                const comment = document.getElementById('comment').value;
+                
+                if (rating === 0) {
+                    alert("Veuillez sélectionner une note");
+                    return;
+                }
+                
+                try {
+                    const review = await ReviewService.addReview(doctorId, currentUser.id, rating, comment);
+                    
+                    if (review) {
+                        alert("Votre avis a été ajouté avec succès");
+                        closeModal();
+                        
+                        // Recharger les avis
+                        await loadDoctorReviews(doctorId);
+                    }
+                } catch (error) {
+                    alert(`Erreur lors de l'ajout de l'avis: ${error.message}`);
+                }
+            });
+        }
+        
+        // Fonction utilitaire pour formater une date
+        function formatDate(date) {
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            return new Date(date).toLocaleDateString('fr-FR', options);
+        }
+        
+        // Fonction utilitaire pour générer les étoiles d'une note
+        function generateStarRating(rating) {
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                if (i <= rating) {
+                    stars += '<i class="fas fa-star"></i>';
+                } else if (i - 0.5 <= rating) {
+                    stars += '<i class="fas fa-star-half-alt"></i>';
+                } else {
+                    stars += '<i class="far fa-star"></i>';
+                }
+            }
+            return stars;
+        }
+        
+        // Fonction utilitaire pour afficher la formation
+        function renderEducation(education) {
+            if (!Array.isArray(education) || education.length === 0) {
+                return '<p>Aucune information disponible.</p>';
+            }
+            
+            return education.map(item => `
+                <div class="education-item">
+                    <h4>${item.degree}</h4>
+                    <p>${item.institution}, ${item.year}</p>
+                </div>
+            `).join('');
+        }
+        
+        // Fonction utilitaire pour afficher l'expérience
+        function renderExperience(experience) {
+            if (!Array.isArray(experience) || experience.length === 0) {
+                return '<p>Aucune information disponible.</p>';
+            }
+            
+            return experience.map(item => `
+                <div class="experience-item">
+                    <h4>${item.position}</h4>
+                    <p>${item.institution}, ${item.startYear} - ${item.endYear || 'Présent'}</p>
+                    <p>${item.description || ''}</p>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>

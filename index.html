@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocFinder - Trouvez le médecin qu'il vous faut</title>
+    <meta name="description" content="DocFinder vous aide à trouver les meilleurs médecins dans votre région, à prendre rendez-vous en ligne et à consulter les avis des patients.">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Font Awesome pour les icônes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Parse SDK -->
+    <script src="https://npmcdn.com/parse/dist/parse.min.js"></script>
+</head>
+<body>
+    <header class="main-header">
+        <div class="container">
+            <div class="logo">
+                <a href="index.html">
+                    <h1>Doc<span>Finder</span></h1>
+                </a>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html" class="active">Accueil</a></li>
+                    <li><a href="search.html">Recherche</a></li>
+                    <li><a href="about.html">À propos</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </nav>
+            <div class="auth-buttons">
+                <a href="login.html" class="btn btn-outline">Connexion</a>
+                <a href="register.html" class="btn btn-primary">Inscription</a>
+            </div>
+            <button id="mobileMenuBtn" class="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <div id="mobileMenu" class="mobile-menu">
+            <ul>
+                <li><a href="index.html" class="active">Accueil</a></li>
+                <li><a href="search.html">Recherche</a></li>
+                <li><a href="about.html">À propos</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li><a href="login.html">Connexion</a></li>
+                <li><a href="register.html">Inscription</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Trouvez le médecin qu'il vous faut</h1>
+                <p>Prenez rendez-vous avec les meilleurs médecins près de chez vous</p>
+                <form id="searchForm" class="search-form">
+                    <div class="form-group">
+                        <select id="citySelect" required>
+                            <option value="">Sélectionnez une ville</option>
+                            <option value="Paris">Paris</option>
+                            <option value="Lyon">Lyon</option>
+                            <option value="Marseille">Marseille</option>
+                            <option value="Bordeaux">Bordeaux</option>
+                            <option value="Lille">Lille</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <select id="specialtySelect" required>
+                            <option value="">Sélectionnez une spécialité</option>
+                            <option value="Généraliste">Généraliste</option>
+                            <option value="Cardiologue">Cardiologue</option>
+                            <option value="Dermatologue">Dermatologue</option>
+                            <option value="Pédiatre">Pédiatre</option>
+                            <option value="Ophtalmologue">Ophtalmologue</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Rechercher
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <section class="specialties">
+        <div class="container">
+            <h2 class="section-title">Spécialités médicales</h2>
+            <div class="specialties-grid">
+                <div class="specialty-card">
+                    <div class="specialty-icon">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                    <h3>Généraliste</h3>
+                    <p>Consultations générales et suivi médical</p>
+                </div>
+                <div class="specialty-card">
+                    <div class="specialty-icon">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <h3>Cardiologue</h3>
+                    <p>Spécialiste du cœur et des vaisseaux</p>
+                </div>
+                <div class="specialty-card">
+                    <div class="specialty-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3>Neurologue</h3>
+                    <p>Spécialiste du système nerveux</p>
+                </div>
+                <div class="specialty-card">
+                    <div class="specialty-icon">
+                        <i class="fas fa-child"></i>
+                    </div>
+                    <h3>Pédiatre</h3>
+                    <p>Spécialiste de la santé des enfants</p>
+                </div>
+                <div class="specialty-card">
+                    <div class="specialty-icon">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <h3>Ophtalmologue</h3>
+                    <p>Spécialiste des yeux et de la vision</p>
+                </div>
+                <div class="specialty-card">
+                    <div class="specialty-icon">
+                        <i class="fas fa-tooth"></i>
+                    </div>
+                    <h3>Dentiste</h3>
+                    <p>Spécialiste des soins dentaires</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="featured-doctors">
+        <div class="container">
+            <h2 class="section-title">Médecins recommandés</h2>
+            <div class="doctors-grid">
+                <!-- Les médecins seront chargés dynamiquement depuis Back4App -->
+            </div>
+        </div>
+    </section>
+
+    <section class="how-it-works">
+        <div class="container">
+            <h2 class="section-title">Comment ça marche</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3>Recherchez</h3>
+                    <p>Trouvez un médecin par spécialité et localisation</p>
+                </div>
+                <div class="step">
+                    <div class="step-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <h3>Réservez</h3>
+                    <p>Choisissez un créneau et prenez rendez-vous en ligne</p>
+                </div>
+                <div class="step">
+                    <div class="step-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3>Consultez</h3>
+                    <p>Rendez-vous chez le médecin à l'heure convenue</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="testimonials">
+        <div class="container">
+            <h2 class="section-title">Ce que disent nos utilisateurs</h2>
+            <div class="testimonials-slider">
+                <div class="testimonial">
+                    <div class="testimonial-content">
+                        <p>"Grâce à DocFinder, j'ai pu trouver un excellent spécialiste près de chez moi et prendre rendez-vous en quelques clics. Je recommande vivement !"</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="testimonial-author-image">
+                            <img src="https://randomuser.me/api/portraits/women/32.jpg" alt="Marie Dupont">
+                        </div>
+                        <div class="testimonial-author-info">
+                            <h4>Marie Dupont</h4>
+                            <p>Paris</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial">
+                    <div class="testimonial-content">
+                        <p>"Interface simple et intuitive. J'ai pu comparer plusieurs médecins et choisir celui qui correspondait le mieux à mes besoins. Très satisfait du service !"</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="testimonial-author-image">
+                            <img src="https://randomuser.me/api/portraits/men/45.jpg" alt="Thomas Martin">
+                        </div>
+                        <div class="testimonial-author-info">
+                            <h4>Thomas Martin</h4>
+                            <p>Lyon</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <h2>Doc<span>Finder</span></h2>
+                    <p>Trouvez le médecin qu'il vous faut</p>
+                </div>
+                <div class="footer-links">
+                    <h3>Liens rapides</h3>
+                    <ul>
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="search.html">Recherche</a></li>
+                        <li><a href="about.html">À propos</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h3>Informations</h3>
+                    <ul>
+                        <li><a href="terms.html">Conditions d'utilisation</a></li>
+                        <li><a href="privacy.html">Politique de confidentialité</a></li>
+                        <li><a href="faq.html">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="footer-contact">
+                    <h3>Contact</h3>
+                    <p><i class="fas fa-envelope"></i> contact@docfinder.fr</p>
+                    <p><i class="fas fa-phone"></i> +33 1 23 45 67 89</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 DocFinder. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="back4app-config.js" type="module"></script>
+    <script src="services.js" type="module"></script>
+    <script src="script.js" type="module"></script>
+</body>
+</html>

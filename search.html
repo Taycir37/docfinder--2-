@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recherche de médecins - DocFinder</title>
+    <meta name="description" content="Recherchez des médecins par spécialité et localisation sur DocFinder.">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Styles spécifiques à la page de recherche */
+        .search-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: var(--white);
+            padding: var(--spacing-xl) 0;
+        }
+        
+        .search-results {
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            gap: var(--spacing-xl);
+            padding: var(--spacing-xl) 0;
+        }
+        
+        .filters {
+            background-color: var(--white);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: calc(var(--spacing-xl) + 80px);
+            max-height: calc(100vh - 150px);
+            overflow-y: auto;
+        }
+        
+        .filter-section {
+            margin-bottom: var(--spacing-lg);
+            border-bottom: 1px solid var(--gray-200);
+            padding-bottom: var(--spacing-lg);
+        }
+        
+        .filter-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .filter-title {
+            font-weight: 600;
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .filter-content {
+            margin-top: var(--spacing-sm);
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            margin-right: var(--spacing-sm);
+        }
+        
+        .results-header {
+            background-color: var(--white);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .results-count {
+            font-weight: 600;
+        }
+        
+        .sort-select {
+            padding: 0.5rem;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--gray-300);
+        }
+        
+        .doctor-result-card {
+            display: flex;
+            flex-direction: column;
+            background-color: var(--white);
+            border-radius: var(--border-radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            margin-bottom: var(--spacing-lg);
+            transition: var(--transition);
+        }
+        
+        .doctor-result-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-3px);
+        }
+        
+        .doctor-result-content {
+            display: flex;
+            padding: var(--spacing-lg);
+        }
+        
+        .doctor-result-image {
+            width: 120px;
+            height: 120px;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            margin-right: var(--spacing-lg);
+            flex-shrink: 0;
+        }
+        
+        .doctor-result-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .doctor-result-info {
+            flex-grow: 1;
+        }
+        
+        .doctor-result-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .doctor-result-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .doctor-result-specialty {
+            color: var(--secondary);
+            font-weight: 500;
+        }
+        
+        .doctor-result-rating {
+            display: flex;
+            align-items: center;
+        }
+        
+        .doctor-result-rating i {
+            color: #fbbf24;
+            margin-right: var(--spacing-xs);
+        }
+        
+        .doctor-result-details {
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .doctor-result-detail {
+            display: flex;
+            align-items: center;
+            margin-bottom: var(--spacing-xs);
+            color: var(--gray-600);
+            font-size: 0.875rem;
+        }
+        
+        .doctor-result-detail i {
+            width: 16px;
+            margin-right: var(--spacing-sm);
+            color: var(--primary);
+        }
+        
+        .doctor-result-actions {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-md);
+        }
+        
+        @media (max-width: 768px) {
+            .search-results {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters {
+                position: static;
+                margin-bottom: var(--spacing-lg);
+            }
+            
+            .doctor-result-content {
+                flex-direction: column;
+            }
+            
+            .doctor-result-image {
+                width: 100%;
+                height: 200px;
+                margin-right: 0;
+                margin-bottom: var(--spacing-md);
+            }
+            
+            .doctor-result-header {
+                flex-direction: column;
+            }
+            
+            .doctor-result-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header / Navigation -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">
+                    <span>DocFinder</span>
+                </a>
+                
+                <nav class="main-nav">
+                    <ul class="nav-links">
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="search.html" class="active">Rechercher</a></li>
+                        <li><a href="about.html">À propos</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </nav>
+                
+                <div class="auth-buttons">
+                    <a href="login.html" class="btn btn-outline">Connexion</a>
+                    <a href="register.html" class="btn btn-primary">Inscription</a>
+                </div>
+                
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            
+            <!-- Mobile Menu -->
+            <div class="mobile-menu" id="mobileMenu">
+                <ul class="mobile-nav-links">
+                    <li><a href="index.html">Accueil</a></li>
+                    <li><a href="search.html">Rechercher</a></li>
+                    <li><a href="about.html">À propos</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                    <li><a href="login.html">Connexion</a></li>
+                    <li><a href="register.html">Inscription</a></li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <!-- Search Header -->
+    <section class="search-header">
+        <div class="container">
+            <h1>Recherche de médecins</h1>
+            <div class="search-form-container">
+                <form class="search-form" id="searchForm">
+                    <div class="form-group">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <select id="citySelect" required>
+                            <option value="" disabled selected>Sélectionnez une ville</option>
+                            <option value="Paris">Paris</option>
+                            <option value="Lyon">Lyon</option>
+                            <option value="Marseille">Marseille</option>
+                            <option value="Bordeaux">Bordeaux</option>
+                            <option value="Lille">Lille</option>
+                            <option value="Toulouse">Toulouse</option>
+                            <option value="Nice">Nice</option>
+                            <option value="Nantes">Nantes</option>
+                            <option value="Strasbourg">Strasbourg</option>
+                            <option value="Montpellier">Montpellier</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <i class="fas fa-search"></i>
+                        <select id="specialtySelect" required>
+                            <option value="" disabled selected>Sélectionnez une spécialité</option>
+                            <option value="Médecin généraliste">Médecin généraliste</option>
+                            <option value="Cardiologue">Cardiologue</option>
+                            <option value="Dermatologue">Dermatologue</option>
+                            <option value="Gynécologue">Gynécologue</option>
+                            <option value="Ophtalmologue">Ophtalmologue</option>
+                            <option value="Pédiatre">Pédiatre</option>
+                            <option value="Psychiatre">Psychiatre</option>
+                            <option value="Dentiste">Dentiste</option>
+                            <option value="Orthopédiste">Orthopédiste</option>
+                            <option value="Neurologue">Neurologue</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-gradient">Rechercher</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Search Results -->
+    <section class="search-results">
+        <div class="container">
+            <div class="search-results-content">
+                <!-- Filters -->
+                <div class="filters">
+                    <h2>Filtres</h2>
+                    
+                    <div class="filter-section">
+                        <div class="filter-title">
+                            <span>Distance</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="filter-content">
+                            <input type="range" min="1" max="20" value="5" class="slider" id="distanceSlider">
+                            <div class="slider-labels">
+                                <span>0 km</span>
+                                <span id="distanceValue">5 km</span>
+                                <span>20 km</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-section">
+                        <div class="filter-title">
+                            <span>Évaluation</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="filter-content">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="rating4">
+                                <label for="rating4">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                    et plus
+                                </label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="rating3">
+                                <label for="rating3">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                    et plus
+                                </label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="rating2">
+                                <label for="rating2">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                    et plus
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-section">
+                        <div class="filter-title">
+                            <span>Disponibilité</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="filter-content">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="availability-today">
+                                <label for="availability-today">Disponible aujourd'hui</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="availability-tomorrow">
+                                <label for="availability-tomorrow">Disponible demain</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="availability-week">
+                                <label for="availability-week">Disponible cette semaine</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-section">
+                        <div class="filter-title">
+                            <span>Genre du médecin</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="filter-content">
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="gender-male">
+                                <label for="gender-male">Homme</label>
+                            </div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="gender-female">
+                                <label for="gender-female">Femme</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-actions">
+                        <button class="btn btn-gradient" id="applyFilters">Appliquer les filtres</button>
+                        <button class="btn btn-outline" id="resetFilters">Réinitialiser</button>
+                    </div>
+                </div>
+                
+                <!-- Results -->
+                <div class="results">
+                    <div class="results-header">
+                        <div class="results-count">12 médecins trouvés</div>
+                        <select class="sort-select" id="sortSelect">
+                            <option value="relevance">Pertinence</option>
+                            <option value="rating">Évaluation</option>
+                            <option value="distance">Distance</option>
+                            <option value="availability">Disponibilité</option>
+                        </select>
+                    </div>
+                    
+                    <div class="doctor-results">
+                        <!-- Doctor 1 -->
+                        <div class="doctor-result-card">
+                            <div class="doctor-result-content">
+                                <div class="doctor-result-image">
+                                    <img src="images/doctor-1.jpg" alt="Dr. Sophie Martin">
+                                </div>
+                                <div class="doctor-result-info">
+                                    <div class="doctor-result-header">
+                                        <div>
+                                            <h3 class="doctor-result-name">Dr. Sophie Martin</h3>
+                                            <p class="doctor-result-specialty">Cardiologue</p>
+                                        </div>
+                                        <div class="doctor-result-rating">
+                                            <i class="fas fa-star"></i>
+                                            <span>4.9</span>
+                                            <span class="reviews">(124 avis)</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="doctor-result-details">
+                                        <div class="doctor-result-detail">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            <span>15 rue de la Paix, Paris</span>
+                                        </div>
+                                        <div class="doctor-result-detail">
+                                            <i class="fas fa-phone"></i>
+                                            <span>01 23 45 67 89</span>
+                                        </div>
+                                        <div class="doctor-result-detail">
+                                            <i class="fas fa-clock"></i>
+                                            <span>9h00 - 18h00</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="doctor-result-actions">
+                                        <a href="doctor-profile.html?id=1" class="btn btn-outline">Voir le profil</a>
+                                        <a href="booking.html?id=1" class="btn btn-primary">
+                                            <i class="fas fa-calendar-alt"></i>
+                                            Prendre rendez-vous
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Doctor 2 -->
+                        <div class="doctor-result-card">
+                            <div class="doctor-result-content">
+                                <div class="doctor-result-image">
+                                    <img src="images/doctor-2.jpg" alt="Dr. Thomas Dubois">
+                                </div>
+                                <div class="doctor-result-info">
+                                    <div class="doctor-result-header">
+                                        <div>
+                                            <h3 class="doctor-result-name">Dr. Thomas Dubois</h3>
+                                            <p class="doctor-result-specialty">Dermatologue</p>
+                                        </div>
+                                        <div class="doctor-result-rating">
+                                            <i class="fas fa-star"></i>
+                                            <span>4.8</span>
+                                            <span class="reviews">(98 avis)</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="doctor-result-details">
+                                        <div class="doctor-result-detail">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            <span>8 avenue Victor Hugo, Lyon</span>
+                                        </div>
+                                        <div class="doctor-result-detail">
+                                            <i class="fas fa-phone"></i>
+                                            <span>04 56 78 90 12</span>
+                                        </div>
+                                        <div class="doctor-result-detail">
+                                            <i class="fas fa-clock"></i>
+                                            <span>8h30 - 17h30</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="doctor-result-actions">
+                                        <a href="doctor-profile.html?id=2" class="btn btn-outline">Voir le profil</a>
+                                        <a href="booking.html?id=2" class="btn btn-primary">
+                                            <i class="fas fa-calendar-alt"></i>
+                                            Prendre rendez-vous
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- More doctors would be added here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>DocFinder</h3>
+                    <p>Trouvez le médecin idéal près de chez vous, prenez rendez-vous en ligne et consultez les avis des patients.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-column">
+                    <h4>Liens rapides</h4>
+                    <ul>
+                        <li><a href="index.html">Accueil</a></li>
+                        <li><a href="search.html">Rechercher un médecin</a></li>
+                        <li><a href="about.html">À propos</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h4>Spécialités</h4>
+                    <ul>
+                        <li><a href="search.html?specialty=Médecin généraliste">Médecin généraliste</a></li>
+                        <li><a href="search.html?specialty=Cardiologue">Cardiologue</a></li>
+                        <li><a href="search.html?specialty=Dermatologue">Dermatologue</a></li>
+                        <li><a href="search.html?specialty=Pédiatre">Pédiatre</a></li>
+                        <li><a href="search.html?specialty=Dentiste">Dentiste</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h4>Contact</h4>
+                    <ul class="contact-info">
+                        <li><i class="fas fa-envelope"></i> <a href="mailto:contact@docfinder.fr">contact@docfinder.fr</a></li>
+                        <li><i class="fas fa-phone"></i> <a href="tel:+33123456789">+33 1 23 45 67 89</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 DocFinder. Tous droits réservés.</p>
+                <div class="footer-links">
+                    <a href="terms.html">Conditions d'utilisation</a>
+                    <a href="privacy.html">Politique de confidentialité</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Search page specific JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            // Distance slider
+            const distanceSlider = document.getElementById('distanceSlider');
+            const distanceValue = document.getElementById('distanceValue');
+            
+            if (distanceSlider && distanceValue) {
+                distanceSlider.addEventListener('input', function() {
+                    distanceValue.textContent = this.value + ' km';
+                });
+            }
+            
+            // Filter toggles
+            const filterTitles = document.querySelectorAll('.filter-title');
+            filterTitles.forEach(title => {
+                title.addEventListener('click', function() {
+                    const content = this.nextElementSibling;
+                    const icon = this.querySelector('i');
+                    
+                    if (content.style.display === 'none') {
+                        content.style.display = 'block';
+                        icon.classList.remove('fa-chevron-down');
+                        icon.classList.add('fa-chevron-up');
+                    } else {
+                        content.style.display = 'none';
+                        icon.classList.remove('fa-chevron-up');
+                        icon.classList.add('fa-chevron-down');
+                    }
+                });
+            });
+            
+            // Apply filters button
+            const applyFiltersBtn = document.getElementById('applyFilters');
+            if (applyFiltersBtn) {
+                applyFiltersBtn.addEventListener('click', function() {
+                    // In a real app, this would filter the results
+                    alert('Filtres appliqués');
+                });
+            }
+            
+            // Reset filters button
+            const resetFiltersBtn = document.getElementById('resetFilters');
+            if (resetFiltersBtn) {
+                resetFiltersBtn.addEventListener('click', function() {
+                    // Reset all filters
+                    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                        checkbox.checked = false;
+                    });
+                    
+                    if (distanceSlider) {
+                        distanceSlider.value = 5;
+                        distanceValue.textContent = '5 km';
+                    }
+                    
+                    // In a real app, this would reset the results
+                    alert('Filtres réinitialisés');
+                });
+            }
+            
+            // Sort select
+            const sortSelect = document.getElementById('sortSelect');
+            if (sortSelect) {
+                sortSelect.addEventListener('change', function() {
+                    // In a real app, this would sort the results
+                    alert('Résultats triés par : ' + this.value);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
